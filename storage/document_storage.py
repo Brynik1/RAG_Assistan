@@ -1,0 +1,27 @@
+from storage.components import FileStorage, VectorStorage
+
+
+class DocumentStorage:
+    """
+    Класс для работы с документами. Является посредником между хранилищами и бизнес-логикой.
+    Позволяет синхронизировать текстовое и векторное хранилище
+    """
+
+    def __init__(self,
+                 vector_store: VectorStorage,
+                 file_store: FileStorage):
+        self.vector_store = vector_store
+        self.file_store = file_store
+
+    def add_document(self,
+                     token: str,
+                     filename: str,
+                     text: str):
+        self.file_store.add_document(token, filename, text)
+        self.vector_store.add_document(token, filename, text)
+
+    def get_retriever(self,
+                      token: str,
+                      filenames: list[str],
+                      top_k: int = 5):
+        return self.vector_store.get_retriever(token, filenames, top_k)
