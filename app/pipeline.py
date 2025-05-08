@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict
 import os
 
 from storage.document_storage import DocumentStorage
@@ -13,7 +13,7 @@ load_dotenv()
 
 
 class RAGOpenAiPipeline:
-    """RAG пайплайн для обработки запросов с предобработкой и поиском по документам."""
+    """RAG пайплайн для обработки запросов с предобработкой и поиском по документам """
 
     # Константы для промптов
     DEFAULT_SYSTEM_PROMPT = """
@@ -75,7 +75,7 @@ class RAGOpenAiPipeline:
                  openai_model: str = "gpt-4o-mini",
                  openai_model_temperature: float = 0.1,
                  openai_proxy_url: str = "https://api.proxyapi.ru/openai/v1",
-                 openai_model_system_prompt: str = None,
+                 openai_system_prompt: str = None,
                  vector_storage_kwargs: Optional[Dict[str, int]] = None):
 
         """Инициализирует пайплайн с хранилищами и моделями."""
@@ -97,20 +97,20 @@ class RAGOpenAiPipeline:
             base_url=openai_proxy_url
         )
 
-        self.system_prompt = openai_model_system_prompt or self.DEFAULT_SYSTEM_PROMPT
+        self.system_prompt = openai_system_prompt or self.DEFAULT_SYSTEM_PROMPT
 
     def ingest(self,
                token: str,
                filename: str,
                input_dir: str = "../infrastructure/input_files"):
         """
-            Добавляет текстовый документ в хранилище документов после обработки.
+        Добавляет текстовый документ в хранилище документов после обработки.
 
-            Args:
-                token (str): Уникальный идентификатор пользователя/сессии для привязки документа
-                filename (str): Имя файла для добавления (без пути)
-                input_dir (str, optional): Директория, в которой находится файл.
-                                         По умолчанию "../infrastructure/input_files".
+        Args:
+            token (str): Уникальный идентификатор пользователя/сессии для привязки документа
+            filename (str): Имя файла для добавления (без пути)
+            input_dir (str, optional): Директория, в которой находится файл.
+                                     По умолчанию "../infrastructure/input_files".
         """
 
         filepath = os.path.join(input_dir, filename)
@@ -124,15 +124,9 @@ class RAGOpenAiPipeline:
         else:
             print(f"\nФайл {filename} не найден")
 
-    def _preprocess_query(self, user_query: str) -> str:
+    def _preprocess_query(self, user_query: str):
         """
-        Предварительно обрабатывает пользовательский запрос
-
-        Args:
-            user_query (str): Оригинальный запрос пользователя
-
-        Returns:
-            str: Очищенный запрос в виде набора тегов
+        Предварительно обрабатывает пользовательский запрос, удаляет все лишнее
         """
 
         prompt = ChatPromptTemplate.from_messages([
@@ -149,7 +143,7 @@ class RAGOpenAiPipeline:
               token: str,
               user_query: str,
               filenames: list[str],
-              top_k: int = 3) -> str:
+              top_k: int = 3):
         """
         Отправление запроса к ретриверу и реализация логики самого пайплайна
         :param filename:
@@ -159,16 +153,19 @@ class RAGOpenAiPipeline:
         :return: content - результат генерации LLM по промпту и контексту из ретривера
         """
         processed_query = self._preprocess_query(user_query)
-        retriever = self.document_store.get_retriever(token=token,
-                                                      filenames=filenames,
-                                                      top_k=top_k)
+        retriever = self.document_store.get_retriever(
+            token=token,
+            filenames=filenames,
+            top_k=top_k
+        )
+
         retrieved_docs = retriever.invoke(processed_query)
         context = "\n\n".join(doc.page_content for doc in retrieved_docs)
 
         print(f"Предобработанный запрос: {processed_query}")
 
         prompt = ChatPromptTemplate.from_messages([
-            ("system", self.system_prompt + f"\n\nКонтекст:{context}"),
+            ("system", self.system_prompt + f"\nКонтекст:{context}"),
             ("human", "Вопрос:\n{question}")
         ])
 
@@ -179,7 +176,7 @@ class RAGOpenAiPipeline:
 
 
 if __name__ == "__main__":
-    old_prompt = '''
+    old_prompt = """
     Ты — AI-ментор в чат-боте для онбординга новых сотрудников. Твоя единственная задача — помогать пользователям, отвечая на их вопросы строго на основе предоставленного тебе контекста. Ни при каких обстоятельствах ты не должен выдумывать информацию, домысливать детали, интерпретировать контекст вольно или исправлять его. Ты обязан использовать исключительно те данные, которые даны в твоей базе знаний или предоставленных материалах.
     
     **Твои обязанности:**
@@ -205,11 +202,11 @@ if __name__ == "__main__":
     
     **Роль:**  
     Ты — профессиональный AI-ментор для онбординга сотрудников. Твоя работа — четко, корректно и без искажений помогать новым сотрудникам быстрее понимать правила, процессы и задачи компании на основе данного тебе контекста.
-    '''
+    """
 
     pipeline = RAGOpenAiPipeline(
         vector_storage_kwargs={'chunk_size': 800, 'chunk_overlap': 200},
-        openai_model_system_prompt=old_prompt
+        openai_system_prompt=old_prompt
     )
 
     input_dir = "../infrastructure/input_files"  # Буферная директория с файлами для добавления
