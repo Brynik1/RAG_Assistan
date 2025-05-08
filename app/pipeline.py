@@ -118,7 +118,7 @@ class RAGOpenAiPipeline:
             text = TextProcessor.extract_text(filepath)
             if text:
                 print(f"\nДобавление '{filename}' пользователю {token}:")
-                pipeline.document_store.add_document(token, filename, text)
+                self.document_store.add_document(token, filename, text)
             else:
                 print(f"\nФайл {filename} не содержит текст")
         else:
@@ -146,8 +146,8 @@ class RAGOpenAiPipeline:
               top_k: int = 3):
         """
         Отправление запроса к ретриверу и реализация логики самого пайплайна
-        :param filename:
         :param token: Уникальный идентификатор пользователя
+        :param filenames: Список имен файлов
         :param user_query: Текстовый запрос от пользователя
         :param top_k: Количество возвращённых ретривером чанков
         :return: content - результат генерации LLM по промпту и контексту из ретривера
@@ -209,22 +209,22 @@ if __name__ == "__main__":
         openai_system_prompt=old_prompt
     )
 
-    input_dir = "../infrastructure/input_files"  # Буферная директория с файлами для добавления
-    filenames = ["Правила компании.txt", "Частые вопросы.txt", "Онбординг.txt"]  # Список файлов для добавления
+    input_directory = "../infrastructure/input_files"  # Буферная директория с файлами для добавления
+    files = ["Правила компании.txt", "Частые вопросы.txt", "Онбординг.txt"]  # Список файлов для добавления
     # filenames = ["Уголовный Кодекс.docx"]
 
     user_token = "test_many_files"
 
     # Проверка наличия буферной директории
-    if not os.path.exists(input_dir):
-        os.makedirs(input_dir)
-        print(f"Создана директория: {input_dir}")
+    if not os.path.exists(input_directory):
+        os.makedirs(input_directory)
+        print(f"Создана директория: {input_directory}")
         print("Пожалуйста, положите свои файлы в директорию")
         exit()
 
     # Процесс добавления файлов
-    for filename in filenames:
-        pipeline.ingest(user_token, filename)
+    for file in files:
+        pipeline.ingest(user_token, file)
 
     # pipeline.document_store.vector_store.delete_document("user123",file_id="file_xyz")
     # print(pipeline.document_store.vector_store.get_document("user123", "file_xyz"))
@@ -246,7 +246,7 @@ if __name__ == "__main__":
             continue
 
         try:
-            answer = pipeline.query(user_token, user_input, filenames=filenames)
+            answer = pipeline.query(user_token, user_input, filenames=files)
             print("\n\033[35mРобот Алёша:\033[0m")
             print(answer)
 
