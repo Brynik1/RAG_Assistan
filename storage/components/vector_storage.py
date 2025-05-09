@@ -97,3 +97,7 @@ class VectorStorage:
         ]
         temp_db = FAISS.from_documents(docs, self.embedding_model)
         return temp_db.as_retriever(search_kwargs={"k": top_k})
+
+    def list_user_tokens(self) -> List[str]:
+        """Возвращает список токенов пользователей, которые есть в хранилище."""
+        return [d.name for d in self.base_path.iterdir() if d.is_dir()]

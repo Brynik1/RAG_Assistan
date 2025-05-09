@@ -35,3 +35,7 @@ class FileStorage:
         """Возвращает список документов пользователя."""
         user_path = self.base_path / token
         return [f.name for f in user_path.iterdir()] if user_path.exists() else []
+
+    def list_user_tokens(self) -> List[str]:
+        """Возвращает список токенов пользователей, которые есть в хранилище."""
+        return [d.name for d in self.base_path.iterdir() if d.is_dir()]

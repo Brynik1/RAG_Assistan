@@ -209,6 +209,8 @@ if __name__ == "__main__":
         openai_system_prompt=old_prompt
     )
 
+    #print(f"Список пользователей: {', '.join(pipeline.document_store.list_user_tokens())}")
+
     input_directory = "../infrastructure/input_files"  # Буферная директория с файлами для добавления
     files = ["Правила компании.txt", "Частые вопросы.txt", "Онбординг.txt"]  # Список файлов для добавления
     # filenames = ["Уголовный Кодекс.docx"]

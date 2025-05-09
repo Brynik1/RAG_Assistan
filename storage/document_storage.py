@@ -1,4 +1,5 @@
 from storage.components import FileStorage, VectorStorage
+from typing import List
 
 
 class DocumentStorage:
@@ -25,3 +26,12 @@ class DocumentStorage:
                       filenames: list[str],
                       top_k: int = 5):
         return self.vector_store.get_retriever(token, filenames, top_k)
+
+    def list_user_tokens(self) -> List[str]:
+        """
+        Возвращает список токенов пользователей, которые есть в хранилищах.
+        Возвращает только токены, присутствующие в обоих хранилищах для согласованности.
+        """
+        file_tokens = set(self.file_store.list_user_tokens())
+        vector_tokens = set(self.vector_store.list_user_tokens())
+        return list(file_tokens & vector_tokens)
