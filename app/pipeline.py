@@ -251,4 +251,4 @@ if __name__ == "__main__":
             print(answer)
 
         except Exception as e:
-            print(f"Произошла ошибка: {str(e)}")
+            print(f"Ошибка: {str(e)}")
