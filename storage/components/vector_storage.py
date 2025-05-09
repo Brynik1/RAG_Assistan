@@ -13,7 +13,9 @@ class VectorStorage:
                  embedding_model: str = "cointegrated/LaBSE-en-ru",
                  chunk_size: int = 600,
                  chunk_overlap: int = 200):
-        self.base_path = Path(base_path)
+        self.base_path = Path(base_path) if base_path else (
+                Path(__file__).parents[3] / "infrastructure" / "faiss"
+        )
         self.embedding_model = HuggingFaceEmbeddings(
             model_name=embedding_model,
             cache_folder=str(Path(__file__).parents[2] / "infrastructure" / "embeddings")

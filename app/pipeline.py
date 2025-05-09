@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from typing import Optional, Dict
+from pathlib import Path
 import os
 
 from storage.document_storage import DocumentStorage
@@ -13,6 +14,8 @@ load_dotenv()
 
 
 class RAGOpenAiPipeline:
+    BASE_DIR = Path(__file__).parent.parent
+
     """RAG пайплайн для обработки запросов с предобработкой и поиском по документам """
 
     # Константы для промптов
@@ -70,8 +73,8 @@ class RAGOpenAiPipeline:
     """
 
     def __init__(self,
-                 files_path: str = "../infrastructure/files",
-                 vectors_path: str = "../infrastructure/faiss",
+                 files_path = str(BASE_DIR / "infrastructure/files"),
+                 vectors_path = str(BASE_DIR / "infrastructure/faiss"),
                  openai_model: str = "gpt-4o-mini",
                  openai_model_temperature: float = 0.1,
                  openai_proxy_url: str = "https://api.proxyapi.ru/openai/v1",
@@ -214,6 +217,8 @@ if __name__ == "__main__":
     # filenames = ["Уголовный Кодекс.docx"]
 
     user_token = "test_many_files"
+
+    print(pipeline.document_store.file_store.list_documents(user_token))
 
     # Проверка наличия буферной директории
     if not os.path.exists(input_directory):
