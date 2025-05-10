@@ -99,7 +99,8 @@ async def token_handler(message: Message) -> None:
     if len(args) < 2:
         await message.answer(
             "Пожалуйста, укажите токен после команды:\n"
-            "`/token ваш_уникальный_токен`"
+            "`/token ваш_уникальный_токен`",
+            parse_mode=ParseMode.MARKDOWN
         )
         return
 
@@ -109,7 +110,8 @@ async def token_handler(message: Message) -> None:
     if token not in pipeline.document_store.list_user_tokens():
         await message.answer(
             "Ваш токен отсутствует в хранилище документов, попробуйте еще раз.\n"
-            "`/token ваш_уникальный_токен`"
+            "`/token ваш_уникальный_токен`",
+            parse_mode=ParseMode.MARKDOWN
         )
         return
 
@@ -117,7 +119,8 @@ async def token_handler(message: Message) -> None:
     await message.answer(
         f"🔑 Токен установлен: `{token}`\n\n"
         "Теперь вы можете задавать вопросы по вашим документам.\n"
-        f"Список документов вашего токена:\n{', '.join(documents)}"
+        f"Список документов вашего токена:\n{', '.join(documents)}",
+        parse_mode=ParseMode.MARKDOWN
     )
     print(token)
 
@@ -140,7 +143,7 @@ async def message_handler(message: Message) -> None:
     # Обработка вопроса пользователя
     try:
         # Получаем список всех файлов пользователя
-        filenames = pipeline.document_store.file_store.list_documents(user_token)
+        filenames = pipeline.document_store.list_documents(user_token)
 
         if not filenames:
             await message.answer(
