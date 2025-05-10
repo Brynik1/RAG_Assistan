@@ -208,15 +208,15 @@ if __name__ == "__main__":
     """
 
     pipeline = RAGOpenAiPipeline(
-        vector_storage_kwargs={'chunk_size': 800, 'chunk_overlap': 200},
+        vector_storage_kwargs={'chunk_size': 1500, 'chunk_overlap': 500},
         openai_system_prompt=old_prompt
     )
 
     input_directory = "../infrastructure/input_files"  # Буферная директория с файлами для добавления
-    files = ["Правила компании.txt", "Частые вопросы.txt", "Онбординг.txt"]  # Список файлов для добавления
+    files = ['Глоссарий корпоративных терминов.txt', 'Политика конфиденциальности.txt', 'Положение о коммерческой тайне.txt', 'Положение об оплате труда и премировании.txt', 'Правила внутреннего трудового распорядка.txt', 'Правила противопожарной безопасности.txt', 'Программа адаптации новых сотрудников.txt', 'Часто задаваемые вопросы.txt']  # Список файлов для добавления
     # filenames = ["Уголовный Кодекс.docx"]
 
-    user_token = "test_many_files"
+    user_token = "many_files"
 
     print(pipeline.document_store.file_store.list_documents(user_token))
 
