@@ -27,6 +27,12 @@ class DocumentStorage:
                       top_k: int = 5):
         return self.vector_store.get_retriever(token, filenames, top_k)
 
+    def list_documents(self, token: str) -> List[str]:
+        """Возвращает список документов пользователя."""
+        file_documents = set(self.file_store.list_documents(token))
+        vector_documents = set(self.vector_store.list_documents(token))
+        return list(file_documents & vector_documents)
+
     def list_user_tokens(self) -> List[str]:
         """
         Возвращает список токенов пользователей, которые есть в хранилищах.
