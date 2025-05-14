@@ -90,15 +90,10 @@ class VectorStorage:
             for doc in self.vectordb.docstore._dict.values()
         })
 
-    def get_retriever(self, token: str, filenames: List[str], top_k: int = 5):
+    def get_retriever(self, token: str, top_k: int = 5):
         """Возвращает retriever для указанных документов."""
         self.load_for_user(token)
-        docs = [
-            doc for doc in self.vectordb.docstore._dict.values()
-            if doc.metadata.get("filename") in filenames
-        ]
-        temp_db = FAISS.from_documents(docs, self.embedding_model)
-        return temp_db.as_retriever(search_kwargs={"k": top_k})
+        return self.vectordb.as_retriever(search_kwargs={"k": top_k})
 
     def list_user_tokens(self) -> List[str]:
         """Возвращает список токенов пользователей, которые есть в хранилище."""

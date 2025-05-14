@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from typing import Optional, Dict
 from pathlib import Path
+import time
 import os
 
 from storage.document_storage import DocumentStorage
@@ -73,8 +74,8 @@ class RAGOpenAiPipeline:
     """
 
     def __init__(self,
-                 files_path = str(BASE_DIR / "infrastructure/files"),
-                 vectors_path = str(BASE_DIR / "infrastructure/faiss"),
+                 files_path=str(BASE_DIR / "infrastructure/files"),
+                 vectors_path=str(BASE_DIR / "infrastructure/faiss"),
                  openai_model: str = "gpt-4o-mini",
                  openai_model_temperature: float = 0.1,
                  openai_proxy_url: str = "https://api.proxyapi.ru/openai/v1",
@@ -145,7 +146,6 @@ class RAGOpenAiPipeline:
     def query(self,
               token: str,
               user_query: str,
-              filenames: list[str],
               top_k: int = 3):
         """
         Отправление запроса к ретриверу и реализация логики самого пайплайна
@@ -155,18 +155,21 @@ class RAGOpenAiPipeline:
         :param top_k: Количество возвращённых ретривером чанков
         :return: content - результат генерации LLM по промпту и контексту из ретривера
         """
+        start_time = time.time()
         processed_query = self._preprocess_query(user_query)
+        print(f"Предобработанный запрос: {processed_query}")
+        print(f"Время предобработки запроса: {time.time() - start_time}")
+        start_time = time.time()
         retriever = self.document_store.get_retriever(
             token=token,
-            filenames=filenames,
             top_k=top_k
         )
-
+        print(f"Время получения ретривера: {time.time() - start_time}")
+        start_time = time.time()
         retrieved_docs = retriever.invoke(processed_query)
         context = "\n\n".join(doc.page_content for doc in retrieved_docs)
-
-        print(f"Предобработанный запрос: {processed_query}")
-
+        print(f"Время получения чанков: {time.time() - start_time}")
+        start_time = time.time()
         prompt = ChatPromptTemplate.from_messages([
             ("system", self.system_prompt + f"\nКонтекст:{context}"),
             ("human", "Вопрос:\n{question}")
@@ -174,6 +177,7 @@ class RAGOpenAiPipeline:
 
         chain = prompt | self.llm
         response = chain.invoke({"question": user_query})
+        print(f"Время получения ответа по контексту: {time.time() - start_time}")
 
         return response.content
 
@@ -213,7 +217,14 @@ if __name__ == "__main__":
     )
 
     input_directory = "../infrastructure/input_files"  # Буферная директория с файлами для добавления
-    files = ['Глоссарий корпоративных терминов.txt', 'Политика конфиденциальности.txt', 'Положение о коммерческой тайне.txt', 'Положение об оплате труда и премировании.txt', 'Правила внутреннего трудового распорядка.txt', 'Правила противопожарной безопасности.txt', 'Программа адаптации новых сотрудников.txt', 'Часто задаваемые вопросы.txt']  # Список файлов для добавления
+    files = ['Глоссарий корпоративных терминов.txt',
+             'Политика конфиденциальности.txt',
+             'Положение о коммерческой тайне.txt',
+             'Положение об оплате труда и премировании.txt',
+             'Правила внутреннего трудового распорядка.txt',
+             'Правила противопожарной безопасности.txt',
+             'Программа адаптации новых сотрудников.txt',
+             'Часто задаваемые вопросы.txt']  # Список файлов для добавления
     # filenames = ["Уголовный Кодекс.docx"]
 
     user_token = "many_files"
@@ -251,7 +262,7 @@ if __name__ == "__main__":
             continue
 
         try:
-            answer = pipeline.query(user_token, user_input, filenames=files)
+            answer = pipeline.query(user_token, user_input)
             print("\n\033[35mРобот Алёша:\033[0m")
             print(answer)
 

@@ -23,9 +23,8 @@ class DocumentStorage:
 
     def get_retriever(self,
                       token: str,
-                      filenames: list[str],
                       top_k: int = 5):
-        return self.vector_store.get_retriever(token, filenames, top_k)
+        return self.vector_store.get_retriever(token, top_k)
 
     def list_documents(self, token: str) -> List[str]:
         """Возвращает список документов пользователя."""
