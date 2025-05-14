@@ -1,5 +1,4 @@
 from dotenv import load_dotenv
-
 import os
 
 from app.RAGOpenAiPipeline import RAGOpenAiPipeline
@@ -23,7 +22,7 @@ if __name__ == "__main__":
              'Программа адаптации новых сотрудников.txt',
              'Часто задаваемые вопросы.txt']  # Список файлов для добавления
 
-    user_token = "many_files"
+    user_token = "example"
 
     print(pipeline.document_store.file_store.list_documents(user_token))
 
@@ -36,10 +35,8 @@ if __name__ == "__main__":
 
     # Процесс добавления файлов
     for file in files:
-        pipeline.ingest(user_token, file)
+        pipeline.ingest(user_token, file, input_dir=input_directory)
 
-    # pipeline.document_store.vector_store.delete_document("user123",file_id="file_xyz")
-    # print(pipeline.document_store.vector_store.get_document("user123", "file_xyz"))
     print("\n\033[35mРобот Алёша:\033[0m")
     print("Добро пожаловать! Я ваш личный консультант, задавайте любые вопросы!")
 

@@ -115,8 +115,7 @@ class RAGOpenAiPipeline:
                                      По умолчанию "../infrastructure/files".
         """
 
-        filepath = os.path.join(input_dir, filename)
-        print(filepath)
+        filepath = os.path.join(input_dir, token, filename)
         if os.path.exists(filepath):
             text = TextProcessor.extract_text(filepath)
             if text:
@@ -175,7 +174,9 @@ class RAGOpenAiPipeline:
 
         return response.content
 
-    def load_token(self, token: str, path_to_files: str):
+    def load_token(self,
+                   token: str,
+                   path_to_files: str = "../infrastructure/files"):
         token_path = path_to_files + f"/{token}"
         for file in os.listdir(token_path):
-            self.ingest(token=token, filename=file, input_dir=token_path)
+            self.ingest(token=token, filename=file, input_dir=path_to_files)
