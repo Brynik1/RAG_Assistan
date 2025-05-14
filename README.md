@@ -34,7 +34,7 @@ TELEGRAM_BOT_TOKEN=your_token
 ```bash
 python app/pipeline.py
 ```
-7. Запустите бота:
+6. Запустите бота:
 ```bash
 python telegram_bot.py
 ```
