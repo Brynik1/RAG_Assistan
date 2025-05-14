@@ -36,8 +36,6 @@ async def help_handler(message: Message):
 2. Задавайте вопросы по вашим документам
 
 Пример:
-`/token test_many_files`
-Затем:
 `Какой у вашей компании график работы?`
 """
     await message.answer(
@@ -54,6 +52,7 @@ async def token_handler(message: Message, user_tokens, pipeline) -> None:
         await message.answer(
             "Пожалуйста, укажите токен после команды:\n"
             "`/token ваш_уникальный_токен`",
+            parse_mode=ParseMode.MARKDOWN
         )
         return
 
@@ -72,4 +71,5 @@ async def token_handler(message: Message, user_tokens, pipeline) -> None:
         f"🔑 Токен установлен: `{token}`\n\n"
         "Теперь вы можете задавать вопросы по вашим документам.\n"
         f"Список документов вашего токена:\n{', '.join(documents)}",
+        parse_mode=ParseMode.MARKDOWN
     )
