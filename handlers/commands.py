@@ -67,9 +67,10 @@ async def token_handler(message: Message, user_tokens, pipeline) -> None:
         return
 
     documents = pipeline.document_store.file_store.list_documents(token)
+    list_documents = ",\n".join(documents)
     await message.answer(
         f"🔑 Токен установлен: `{token}`\n\n"
         "Теперь вы можете задавать вопросы по вашим документам.\n"
-        f"Список документов вашего токена:\n{', '.join(documents)}",
+        f"Список документов вашего токена:\n{list_documents}",
         parse_mode=ParseMode.MARKDOWN
     )

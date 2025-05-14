@@ -14,7 +14,8 @@ async def message_handler(message: Message, user_tokens, pipeline) -> None:
     if user_id not in user_tokens:
         await message.answer(
             "⚠️ Пожалуйста, сначала установите токен с помощью команды `/token`\n\n"
-            "Пример: `/token ваш_уникальный_токен`"
+            "Пример: `/token ваш_уникальный_токен`",
+            parse_mode=ParseMode.MARKDOWN
         )
         return
 
@@ -43,6 +44,7 @@ async def message_handler(message: Message, user_tokens, pipeline) -> None:
             user_query=user_text,
         )
 
+        print(f"\nПользователь: {message.from_user.username}")
         print(f"Токен: {user_token}")
         print(f"Вопрос: {user_text}")
         print(f"Ответ: {answer}")
