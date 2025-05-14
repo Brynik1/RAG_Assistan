@@ -183,7 +183,7 @@ class RAGOpenAiPipeline:
 
 if __name__ == "__main__":
     pipeline = RAGOpenAiPipeline(
-        vector_storage_kwargs={'chunk_size': 1500, 'chunk_overlap': 500},
+        vector_storage_kwargs={'chunk_size': 800, 'chunk_overlap': 200},
     )
 
     input_directory = "../infrastructure/input_files"  # Буферная директория с файлами для добавления
@@ -232,7 +232,7 @@ if __name__ == "__main__":
             continue
 
         try:
-            answer = pipeline.query(user_token, user_input)
+            answer = pipeline.query(user_token, user_input, top_k=7)
             print("\n\033[35mРобот Алёша:\033[0m")
             print(answer)
 
