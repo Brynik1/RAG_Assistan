@@ -30,14 +30,12 @@ OPENAI_API_KEY=your_key
 TELEGRAM_BOT_TOKEN=your_token
 ```
 4. Положите документы в папку infrastructure/input_files/
-5. Запустите бота:
+5. Для инициализации хранилищ запустите пайплайн
+6. Запустите бота:
 ```bash
 python telegram_bot.py
 ```
-или для тестирования пайплайна
-```bash
-python app/pipeline.py
-```
+
 
 ## ⚙️ Основные компоненты
 
