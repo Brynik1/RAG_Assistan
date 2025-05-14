@@ -57,20 +57,45 @@ async def token_handler(message: Message, user_tokens, pipeline) -> None:
         return
 
     token = args[1].strip()
-    user_tokens[message.from_user.id] = token
     if token not in pipeline.document_store.list_user_tokens():
         await message.answer(
             "Ваш токен отсутствует в хранилище документов, попробуйте еще раз.\n"
             "`/token ваш_уникальный_токен`",
             parse_mode=ParseMode.MARKDOWN
         )
+        user_tokens.pop(message.from_user.id, None)
         return
 
+    user_tokens[message.from_user.id] = token
+
     documents = pipeline.document_store.file_store.list_documents(token)
-    list_documents = ",\n".join(documents)
     await message.answer(
         f"🔑 Токен установлен: `{token}`\n\n"
         "Теперь вы можете задавать вопросы по вашим документам.\n"
-        f"Список документов вашего токена:\n{list_documents}",
+        f"📂 Ваши документы:\n\n" + "\n".join(f"•  {doc}" for doc in documents),
+        parse_mode=ParseMode.MARKDOWN
+    )
+
+
+@router.message(Command(commands=['documents']))
+async def documents_handler(message: Message, user_tokens, pipeline) -> None:
+    """Показывает список документов пользователя."""
+    if message.from_user.id not in user_tokens:
+        await message.answer(
+            "⚠️ Пожалуйста, сначала установите токен с помощью команды `/token`\n\n"
+            "Пример: `/token ваш_уникальный_токен`",
+            parse_mode=ParseMode.MARKDOWN
+        )
+        return
+
+    token = user_tokens[message.from_user.id]
+    documents = pipeline.document_store.list_documents(token)
+
+    if not documents:
+        await message.answer("Для вашего токена документы не найдены")
+        return
+
+    await message.answer(
+        f"📂 Ваши документы:\n\n" + "\n".join(f"•  {doc}" for doc in documents),
         parse_mode=ParseMode.MARKDOWN
     )
