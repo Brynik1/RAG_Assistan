@@ -31,7 +31,10 @@ TELEGRAM_BOT_TOKEN=your_token
 ```
 4. Положите документы в папку infrastructure/input_files/
 5. Для инициализации хранилищ запустите пайплайн
-6. Запустите бота:
+```bash
+python app/pipeline.py
+```
+7. Запустите бота:
 ```bash
 python telegram_bot.py
 ```
