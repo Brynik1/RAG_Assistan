@@ -29,14 +29,14 @@ pip install -r requirements.txt
 OPENAI_API_KEY=your_key
 TELEGRAM_BOT_TOKEN=your_token
 ```
-4. Положите документы в папку infrastructure/input_files/
-5. Для инициализации хранилищ запустите пайплайн
+4. Положите документы в папку infrastructure/files/ваш_токен
+5. Для инициализации хранилищ и включения сервиса запустите main (телеграмм бот) или pipline
+```bash
+python main.py
+```
+или
 ```bash
 python app/pipeline.py
-```
-6. Запустите бота:
-```bash
-python telegram_bot.py
 ```
 
 
