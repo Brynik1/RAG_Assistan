@@ -42,6 +42,7 @@ async def message_handler(message: Message, user_tokens, pipeline) -> None:
         answer = pipeline.query(
             token=user_token,
             user_query=user_text,
+            top_k = 7
         )
 
         print(f"\nПользователь: {message.from_user.username}")

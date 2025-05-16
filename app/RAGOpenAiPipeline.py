@@ -144,7 +144,7 @@ class RAGOpenAiPipeline:
     def query(self,
               token: str,
               user_query: str,
-              top_k: int = 3):
+              top_k: int = 5):
         """
         Отправление запроса к ретриверу и реализация логики самого пайплайна
         :param token: Уникальный идентификатор пользователя
