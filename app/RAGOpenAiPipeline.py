@@ -180,3 +180,7 @@ class RAGOpenAiPipeline:
         token_path = path_to_files + f"/{token}"
         for file in os.listdir(token_path):
             self.ingest(token=token, filename=file, input_dir=path_to_files)
+
+    def list_documents(self,
+                       token: str):
+        return self.document_store.list_documents(token)

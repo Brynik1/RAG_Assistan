@@ -23,9 +23,9 @@ async def message_handler(message: Message, user_tokens, pipeline) -> None:
     user_token = user_tokens[user_id]
 
     try:
-        filenames = pipeline.document_store.list_documents(user_token)
+        documents = pipeline.list_documents(user_token)
 
-        if not filenames:
+        if not documents:
             await message.answer(
                 "⚠️ Для вашего токена не найдено документов. "
                 "Пожалуйста, проверьте правильность токена или загрузите документы."
