@@ -7,7 +7,7 @@ router = Router()
 
 
 @router.message(Command(commands=['start']))
-async def start_handler(message: Message):
+async def start_handler(message: Message, user_tokens, pipeline):
     welcome_text = """
 👋 Добро пожаловать в бота - ассистента!
 
@@ -22,6 +22,18 @@ async def start_handler(message: Message):
 """
     await message.answer(
         welcome_text,
+        parse_mode=ParseMode.MARKDOWN
+    )
+
+    token = "example"
+
+    user_tokens[message.from_user.id] = token
+
+    documents = pipeline.list_documents(token)
+    await message.answer(
+        #f"🔑 Токен установлен: `{token}`\n\n"
+        f"Теперь вы можете задавать вопросы по вашим документам.\n\n"
+        f"📂 Ваши документы:\n\n" + "\n".join(f"•  {doc}" for doc in documents),
         parse_mode=ParseMode.MARKDOWN
     )
 

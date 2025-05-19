@@ -55,6 +55,7 @@ class RAGOpenAiPipeline:
     - Приветствия ("Здравствуйте", "Привет" и т.д.)
     - Вежливые формы ("Пожалуйста", "Спасибо", "Будьте добры" и т.д.)
     - Избыточные формулировки
+    - Смайлики и лишние символы
 
     Оставь только суть запроса в виде ключевых слов и фраз, разделенных запятыми.
 
@@ -170,7 +171,7 @@ class RAGOpenAiPipeline:
         ])
 
         chain = prompt | self.llm
-        response = chain.invoke({"question": user_query})
+        response = chain.invoke({"question": "Ввод пользователя: " + user_query + "\nНужен ответ про: " + processed_query})
 
         return response.content
 
