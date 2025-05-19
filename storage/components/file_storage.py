@@ -6,6 +6,7 @@ class FileStorage:
     """Файловое хранилище документов."""
 
     def __init__(self, base_path: str = None):
+        """Инициализирует хранилище с указанным или стандартным путем."""
         self.base_path = Path(base_path) if base_path else (
             Path(__file__).parents[3] / "infrastructure" / "files"
         )
@@ -37,5 +38,5 @@ class FileStorage:
         return [f.name for f in user_path.iterdir()] if user_path.exists() else []
 
     def list_user_tokens(self) -> List[str]:
-        """Возвращает список токенов пользователей, которые есть в хранилище."""
+        """Возвращает список токенов всех пользователей."""
         return [d.name for d in self.base_path.iterdir() if d.is_dir()]

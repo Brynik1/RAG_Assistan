@@ -13,6 +13,7 @@ class VectorStorage:
                  embedding_model: str = "cointegrated/LaBSE-en-ru",
                  chunk_size: int = 600,
                  chunk_overlap: int = 200):
+        """Инициализирует хранилище с указанными параметрами."""
         self.base_path = Path(base_path) if base_path else (
                 Path(__file__).parents[3] / "infrastructure" / "faiss"
         )
@@ -59,6 +60,7 @@ class VectorStorage:
         print("✅ файл добавлен в векторное хранилище")
 
     def _document_exists(self, token: str, filename: str) -> bool:
+        """Проверяет наличие документа в хранилище."""
         if not self.vectordb:
             return False
         return any(
@@ -91,10 +93,10 @@ class VectorStorage:
         })
 
     def get_retriever(self, token: str, top_k: int = 5):
-        """Возвращает retriever для указанных документов."""
+        """Возвращает retriever для поиска по документам."""
         self.load_for_user(token)
         return self.vectordb.as_retriever(search_kwargs={"k": top_k})
 
     def list_user_tokens(self) -> List[str]:
-        """Возвращает список токенов пользователей, которые есть в хранилище."""
+        """Возвращает список токенов всех пользователей."""
         return [d.name for d in self.base_path.iterdir() if d.is_dir()]
