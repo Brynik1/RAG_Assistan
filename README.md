@@ -40,7 +40,6 @@ python main.py
 python app/pipeline.py
 ```
 
-
 ## ⚙️ Основные компоненты
 
 ### Хранилища документов
@@ -65,7 +64,7 @@ python app/pipeline.py
    - commands.py - обработка команд (/start, /help и др.)
    - messages.py - обработка текстовых сообщений пользователя
 
-### **Хранение состояния**
+### **Хранение состояниq**
    - MemoryStorage для хранения токенов пользователей
    - Изоляция данных по user_id (Telegram) и token
 
