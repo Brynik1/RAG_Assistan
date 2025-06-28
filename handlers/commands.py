@@ -4,6 +4,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import Message
 import os
 from dotenv import load_dotenv
+from app.text_utils import TextProcessor
 
 load_dotenv()  # Загружаем переменные окружения
 
@@ -152,6 +153,8 @@ async def admin_handler(message: Message, user_tokens, pipeline) -> None:
     await message.answer(
         "🔓 Вы получили права администратора!\n\n"
         "Доступные команды:\n"
+        "• /create\_token - создать новый токен\n"
+        "• /add\_file - добавить файл к токену\n"
         "• /shutdown - выключение бота\n"
         "• Все обычные команды",
         parse_mode=ParseMode.MARKDOWN
@@ -221,3 +224,113 @@ async def shutdown_handler(message: Message, user_tokens) -> None:
 
     await message.answer("🛑 Выключаю бота...")
     raise SystemExit(0)
+
+
+@router.message(Command(commands=['create_token']))
+async def create_token_handler(message: Message, user_tokens, pipeline) -> None:
+    """Создание нового токена (только для администраторов)"""
+    user_data = user_tokens.get(message.from_user.id, {})
+    if not user_data.get('is_admin', False):
+        await message.answer("❌ Эта команда доступна только администраторам")
+        return
+
+    args = message.text.split(maxsplit=1)
+    if len(args) < 2:
+        await message.answer(
+            "Пожалуйста, укажите токен для создания:\n"
+            "`/create_token новый_токен`",
+            parse_mode=ParseMode.MARKDOWN
+        )
+        return
+
+    token = args[1].strip()
+    if token in pipeline.document_store.list_user_tokens():
+        await message.answer(f"❌ Токен `{token}` уже существует", parse_mode=ParseMode.MARKDOWN)
+        return
+
+    # Создаем пустые директории для токена
+    pipeline.document_store.file_store.add_document(token, "__init__.txt", "Initial file")
+    pipeline.document_store.vector_store.load_for_user(token)
+
+    await message.answer(f"✅ Токен `{token}` успешно создан", parse_mode=ParseMode.MARKDOWN)
+
+
+@router.message(Command(commands=['add_file']))
+async def add_file_handler(message: Message, user_tokens, pipeline) -> None:
+    """Добавление файла к токену (только для администраторов)"""
+    user_data = user_tokens.get(message.from_user.id, {})
+    if not user_data.get('is_admin', False):
+        await message.answer("❌ Эта команда доступна только администраторам")
+        return
+
+    # Проверяем, есть ли документ в сообщении
+    if not message.document:
+        await message.answer(
+            "Пожалуйста, пришлите файл с командой:\n"
+            "`/add_file токен`\n\n"
+            "И прикрепите файл к сообщению",
+            parse_mode=ParseMode.MARKDOWN
+        )
+        return
+
+    # Получаем токен из caption или текста сообщения
+    token = None
+    if message.caption:  # Если файл отправлен с подписью
+        parts = message.caption.split(maxsplit=1)
+        if len(parts) > 1 and parts[0] == '/add_file':
+            token = parts[1].strip()
+    elif message.text:  # Если это обычное сообщение с текстом
+        parts = message.text.split(maxsplit=1)
+        if len(parts) > 1 and parts[0] == '/add_file':
+            token = parts[1].strip()
+
+    if not token:
+        await message.answer(
+            "Пожалуйста, укажите токен для добавления файла:\n"
+            "`/add_file токен`",
+            parse_mode=ParseMode.MARKDOWN
+        )
+        return
+
+    if token not in pipeline.document_store.list_user_tokens():
+        await message.answer(f"❌ Токен `{token}` не существует", parse_mode=ParseMode.MARKDOWN)
+        return
+
+    try:
+        filename = message.document.file_name
+        file_path = f"./infrastructure/files/{token}/{filename}"
+
+        # Проверяем, существует ли файл
+        if os.path.exists(file_path):
+            await message.answer(
+                f"❌ Файл `{filename}` уже существует для токена `{token}`\n\n"
+                "Используйте другое имя файла или удалите существующий файл.",
+                parse_mode=ParseMode.MARKDOWN
+            )
+            return
+
+        # Скачиваем файл
+        file = await message.bot.get_file(message.document.file_id)
+
+        # Создаем директорию, если ее нет
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        # Сохраняем файл
+        await message.bot.download_file(file.file_path, file_path)
+
+        # Добавляем документ в хранилище
+        text = TextProcessor.extract_text(file_path)
+        if not text:
+            raise ValueError("Не удалось извлечь текст из файла")
+
+        pipeline.document_store.add_document(token, filename, text)
+
+        await message.answer(
+            f"✅ Файл `{filename}` успешно добавлен к токену `{token}`",
+            parse_mode=ParseMode.MARKDOWN
+        )
+
+    except Exception as e:
+        await message.answer(f"❌ Ошибка при добавлении файла: {str(e)}")
+        if os.path.exists(file_path):
+            os.remove(file_path)
