@@ -17,7 +17,7 @@ load_dotenv()
 
 async def main() -> None:
     storage = MemoryStorage()
-    user_tokens = {}
+    user_states = {}
 
     pipeline = RAGOpenAiPipeline(
         vector_storage_kwargs={'chunk_size': 800, 'chunk_overlap': 200},
@@ -27,7 +27,7 @@ async def main() -> None:
 
     pipeline.load_token("example", path_to_files="./infrastructure/files")
 
-    dp = Dispatcher(storage=storage, pipeline=pipeline, user_tokens=user_tokens)
+    dp = Dispatcher(storage=storage, pipeline=pipeline, user_states=user_states)
 
     dp.include_router(commands_router)
     dp.include_router(messages_router)

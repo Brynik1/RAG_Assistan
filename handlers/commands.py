@@ -13,7 +13,7 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 
 @router.message(Command(commands=['start']))
-async def start_handler(message: Message, user_tokens, pipeline):
+async def start_handler(message: Message, user_states, pipeline):
     welcome_text = """
 👋 Добрый день! Я ваш персональный ассистент Эмили!
 
@@ -64,7 +64,7 @@ async def help_handler(message: Message):
 
 
 @router.message(Command(commands=['token']))
-async def token_handler(message: Message, user_tokens, pipeline) -> None:
+async def token_handler(message: Message, user_states, pipeline) -> None:
     """Обработчик команды /token."""
     args = message.text.split(maxsplit=1)
     if len(args) < 2:
@@ -82,14 +82,14 @@ async def token_handler(message: Message, user_tokens, pipeline) -> None:
             "`/token ваш_уникальный_токен`",
             parse_mode=ParseMode.MARKDOWN
         )
-        user_tokens.pop(message.from_user.id, None)
+        user_states.pop(message.from_user.id, None)
         return
 
     # Сохраняем токен с учетом возможных админских прав
-    if isinstance(user_tokens.get(message.from_user.id), dict):
-        user_tokens[message.from_user.id]['token'] = token
+    if isinstance(user_states.get(message.from_user.id), dict):
+        user_states[message.from_user.id]['token'] = token
     else:
-        user_tokens[message.from_user.id] = {
+        user_states[message.from_user.id] = {
             'token': token,
             'is_admin': False
         }
@@ -104,9 +104,9 @@ async def token_handler(message: Message, user_tokens, pipeline) -> None:
 
 
 @router.message(Command(commands=['documents']))
-async def documents_handler(message: Message, user_tokens, pipeline) -> None:
+async def documents_handler(message: Message, user_states, pipeline) -> None:
     """Показывает список документов пользователя."""
-    if message.from_user.id not in user_tokens:
+    if message.from_user.id not in user_states:
         await message.answer(
             "⚠️ Пожалуйста, сначала установите токен с помощью команды `/token`\n\n"
             "Пример: `/token ваш_уникальный_токен`",
@@ -114,7 +114,7 @@ async def documents_handler(message: Message, user_tokens, pipeline) -> None:
         )
         return
 
-    token = user_tokens[message.from_user.id]['token']
+    token = user_states[message.from_user.id]['token']
     documents = pipeline.list_documents(token)
 
     if not documents:
@@ -128,7 +128,7 @@ async def documents_handler(message: Message, user_tokens, pipeline) -> None:
 
 
 @router.message(Command(commands=['admin']))
-async def admin_handler(message: Message, user_tokens, pipeline) -> None:
+async def admin_handler(message: Message, user_states, pipeline) -> None:
     """Обработчик команды /admin для получения прав администратора."""
     args = message.text.split(maxsplit=1)
     if len(args) < 2:
@@ -145,8 +145,8 @@ async def admin_handler(message: Message, user_tokens, pipeline) -> None:
         return
 
     # Помечаем пользователя как администратора
-    user_tokens[message.from_user.id] = {
-        'token': user_tokens.get(message.from_user.id, 'example'),
+    user_states[message.from_user.id] = {
+        'token': user_states.get(message.from_user.id, 'example'),
         'is_admin': True
     }
 
@@ -162,7 +162,7 @@ async def admin_handler(message: Message, user_tokens, pipeline) -> None:
 
 
 @router.message(Command(commands=['info']))
-async def info_handler(message: Message, user_tokens, pipeline) -> None:
+async def info_handler(message: Message, user_states, pipeline) -> None:
     """Обработчик команды /info - вывод информации о пользователе"""
     user_id = message.from_user.id
 
@@ -177,8 +177,8 @@ async def info_handler(message: Message, user_tokens, pipeline) -> None:
     }
 
     # Проверяем наличие токена
-    if user_id in user_tokens:
-        user_data = user_tokens[user_id]
+    if user_id in user_states:
+        user_data = user_states[user_id]
 
         # Обрабатываем как старый формат (просто токен), так и новый (словарь)
         if isinstance(user_data, dict):
@@ -201,7 +201,7 @@ async def info_handler(message: Message, user_tokens, pipeline) -> None:
 
     # Добавляем информацию о документах
     if user_info['token']:
-        token = user_tokens[message.from_user.id]['token']
+        token = user_states[message.from_user.id]['token']
         documents = pipeline.list_documents(token)
 
         response_text += f"\n📂 Ваши документы:\n\n" + "\n".join(f"•  {doc}" for doc in documents)
@@ -215,9 +215,9 @@ async def info_handler(message: Message, user_tokens, pipeline) -> None:
     )
 
 @router.message(Command(commands=['shutdown']))
-async def shutdown_handler(message: Message, user_tokens) -> None:
+async def shutdown_handler(message: Message, user_states) -> None:
     """Обработчик команды /shutdown для выключения бота."""
-    user_data = user_tokens.get(message.from_user.id, {})
+    user_data = user_states.get(message.from_user.id, {})
     if not user_data.get('is_admin', False):
         await message.answer("❌ Эта команда доступна только администраторам")
         return
@@ -227,9 +227,9 @@ async def shutdown_handler(message: Message, user_tokens) -> None:
 
 
 @router.message(Command(commands=['create_token']))
-async def create_token_handler(message: Message, user_tokens, pipeline) -> None:
+async def create_token_handler(message: Message, user_states, pipeline) -> None:
     """Создание нового токена (только для администраторов)"""
-    user_data = user_tokens.get(message.from_user.id, {})
+    user_data = user_states.get(message.from_user.id, {})
     if not user_data.get('is_admin', False):
         await message.answer("❌ Эта команда доступна только администраторам")
         return
@@ -244,7 +244,7 @@ async def create_token_handler(message: Message, user_tokens, pipeline) -> None:
         return
 
     token = args[1].strip()
-    if token in pipeline.document_store.list_user_tokens():
+    if token in pipeline.document_store.list_user_states():
         await message.answer(f"❌ Токен `{token}` уже существует", parse_mode=ParseMode.MARKDOWN)
         return
 
@@ -256,9 +256,9 @@ async def create_token_handler(message: Message, user_tokens, pipeline) -> None:
 
 
 @router.message(Command(commands=['add_file']))
-async def add_file_handler(message: Message, user_tokens, pipeline) -> None:
+async def add_file_handler(message: Message, user_states, pipeline) -> None:
     """Добавление файла к токену (только для администраторов)"""
-    user_data = user_tokens.get(message.from_user.id, {})
+    user_data = user_states.get(message.from_user.id, {})
     if not user_data.get('is_admin', False):
         await message.answer("❌ Эта команда доступна только администраторам")
         return
@@ -292,7 +292,7 @@ async def add_file_handler(message: Message, user_tokens, pipeline) -> None:
         )
         return
 
-    if token not in pipeline.document_store.list_user_tokens():
+    if token not in pipeline.document_store.list_user_states():
         await message.answer(f"❌ Токен `{token}` не существует", parse_mode=ParseMode.MARKDOWN)
         return
 

@@ -7,11 +7,11 @@ router = Router()
 
 
 @router.message(F.text)
-async def message_handler(message: Message, user_tokens, pipeline) -> None:
+async def message_handler(message: Message, user_states, pipeline) -> None:
     """Основной обработчик сообщений."""
     user_id = message.from_user.id
 
-    if user_id not in user_tokens:
+    if user_id not in user_states:
         await message.answer(
             "⚠️ Пожалуйста, сначала установите токен с помощью команды `/token`\n\n"
             "`/token ваш_уникальный_токен`",
@@ -19,7 +19,7 @@ async def message_handler(message: Message, user_tokens, pipeline) -> None:
         )
         return
 
-    user_data = user_tokens[user_id]
+    user_data = user_states[user_id]
     user_token = user_data.get('token', 'example') if isinstance(user_data, dict) else user_data
     user_text = message.text.strip()
 
