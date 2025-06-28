@@ -145,8 +145,9 @@ async def admin_handler(message: Message, user_states, pipeline) -> None:
         return
 
     # Помечаем пользователя как администратора
+    token = user_states[message.from_user.id]['token'] if message.from_user.id not in user_states and 'token' in user_states[message.from_user.id] else 'example'
     user_states[message.from_user.id] = {
-        'token': user_states.get(message.from_user.id, 'example'),
+        'token': token,
         'is_admin': True
     }
 
@@ -193,11 +194,10 @@ async def info_handler(message: Message, user_states, pipeline) -> None:
 
     # Формируем ответ
     response_text = "📋 <b>Информация о пользователе:</b>\n\n" + \
-        f"👤 <b>Username:</b> @{user_info['username'] or user_info['full_name']}\n"+ \
-        f"🆔 <b>User ID:</b> <code>{user_info['user_id']}</code>\n"+ \
-        f"🔑 <b>Токен:</b> <code>{user_info['token'] or 'не установлен'}</code>\n"+ \
-        f"🛡 <b>Админ:</b> {'✅ да' if user_info['is_admin'] else '❌ нет'}\n\n"
-
+                    f"👤 <b>Username:</b> @{user_info['username'] or user_info['full_name']}\n" + \
+                    f"🆔 <b>User ID:</b> <code>{user_info['user_id']}</code>\n" + \
+                    f"🔑 <b>Токен:</b> <code>{user_info['token'] or 'не установлен'}</code>\n" + \
+                    f"🛡 <b>Админ:</b> {'✅ да' if user_info['is_admin'] else '❌ нет'}\n\n"
 
     # Добавляем информацию о документах
     if user_info['token']:
@@ -213,6 +213,7 @@ async def info_handler(message: Message, user_states, pipeline) -> None:
         response_text,
         parse_mode=ParseMode.HTML
     )
+
 
 @router.message(Command(commands=['shutdown']))
 async def shutdown_handler(message: Message, user_states) -> None:
