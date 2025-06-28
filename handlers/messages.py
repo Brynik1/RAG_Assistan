@@ -14,13 +14,14 @@ async def message_handler(message: Message, user_tokens, pipeline) -> None:
     if user_id not in user_tokens:
         await message.answer(
             "⚠️ Пожалуйста, сначала установите токен с помощью команды `/token`\n\n"
-            "Пример: `/token ваш_уникальный_токен`",
+            "`/token ваш_уникальный_токен`",
             parse_mode=ParseMode.MARKDOWN
         )
         return
 
+    user_data = user_tokens[user_id]
+    user_token = user_data.get('token', 'example') if isinstance(user_data, dict) else user_data
     user_text = message.text.strip()
-    user_token = user_tokens[user_id]
 
     try:
         documents = pipeline.list_documents(user_token)

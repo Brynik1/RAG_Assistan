@@ -37,7 +37,12 @@ async def main() -> None:
         default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
 
-    await dp.start_polling(bot)
+    try:
+        await dp.start_polling(bot)
+    except SystemExit:
+        print("Бот выключен администратором")
+        await bot.session.close()
+        return
 
 
 if __name__ == "__main__":
