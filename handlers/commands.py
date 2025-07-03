@@ -265,12 +265,13 @@ async def add_file_handler(message: Message, user_states, pipeline) -> None:
         await message.answer("❌ Эта команда доступна только администраторам")
         return
 
-    # Проверяем, есть ли документ в сообщении
+    # Проверяем, есть ли документы в сообщении
     if not message.document:
         await message.answer(
             "Пожалуйста, пришлите файл с командой:\n"
-            "`/add_file токен`\n\n"
-            "И прикрепите файл к сообщению",
+            "`/add_file [токен]`\n\n"
+            "И прикрепите файл к сообщению\n"
+            "Поддерживаемые форматы: .docx, .pdf, .txt",
             parse_mode=ParseMode.MARKDOWN
         )
         return
@@ -288,31 +289,45 @@ async def add_file_handler(message: Message, user_states, pipeline) -> None:
 
     if not token:
         await message.answer(
-            "Пожалуйста, укажите токен для добавления файла:\n"
+            "Пожалуйста, укажите токен для добавления файлов:\n"
             "`/add_file токен`",
             parse_mode=ParseMode.MARKDOWN
         )
         return
 
-    if token not in pipeline.document_store.list_user_states():
+    if token not in pipeline.document_store.list_user_tokens():
         await message.answer(f"❌ Токен `{token}` не существует", parse_mode=ParseMode.MARKDOWN)
         return
 
+    # Обрабатываем прикрепленный документ
+    if message.media_group_id:
+        await message.answer("❌ Пожалуйста, присылайте файлы по одному.", parse_mode=ParseMode.MARKDOWN)
+        return
+    elif message.document:
+        doc = message.document
+    else:
+        await message.answer("ℹ️ Нет файлов для обработки", parse_mode=ParseMode.MARKDOWN)
+        return
+
+    allowed_extensions = {'.docx', '.pdf', '.txt'}
+
+    file_name = doc.file_name
+    file_ext = os.path.splitext(file_name)[1].lower()
+
+    if file_ext not in allowed_extensions:
+        await message.answer(f"❌ Не удалось добавить файл `{file_name}`: недопустимый формат", parse_mode=ParseMode.MARKDOWN)
+        return
+
     try:
-        filename = message.document.file_name
-        file_path = f"./infrastructure/files/{token}/{filename}"
+        file_path = f"./infrastructure/files/{token}/{file_name}"
 
         # Проверяем, существует ли файл
         if os.path.exists(file_path):
-            await message.answer(
-                f"❌ Файл `{filename}` уже существует для токена `{token}`\n\n"
-                "Используйте другое имя файла или удалите существующий файл.",
-                parse_mode=ParseMode.MARKDOWN
-            )
+            await message.answer(f"❌ Файл `{file_name}` уже существует для токена `{token}`", parse_mode=ParseMode.MARKDOWN)
             return
 
         # Скачиваем файл
-        file = await message.bot.get_file(message.document.file_id)
+        file = await message.bot.get_file(doc.file_id)
 
         # Создаем директорию, если ее нет
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
@@ -325,14 +340,10 @@ async def add_file_handler(message: Message, user_states, pipeline) -> None:
         if not text:
             raise ValueError("Не удалось извлечь текст из файла")
 
-        pipeline.document_store.add_document(token, filename, text)
-
-        await message.answer(
-            f"✅ Файл `{filename}` успешно добавлен к токену `{token}`",
-            parse_mode=ParseMode.MARKDOWN
-        )
+        pipeline.document_store.add_document(token, file_name, text)
+        await message.answer(f"✅ Файл `{file_name}` успешно добавлен для токена `{token}`", parse_mode=ParseMode.MARKDOWN)
 
     except Exception as e:
-        await message.answer(f"❌ Ошибка при добавлении файла: {str(e)}")
         if os.path.exists(file_path):
             os.remove(file_path)
+
