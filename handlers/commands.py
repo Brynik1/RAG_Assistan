@@ -21,7 +21,8 @@ async def start_handler(message: Message, user_states, pipeline):
         "🔹 Вспомогательные команды:\n"
         "   • /help - справка о командах\n"
         "   • /documents - показать список ваших документов\n"
-        "   • /info - информация о текущем пользователе\n\n"
+        "   • /info - информация о текущем пользователе\n"
+        "   • /admin [ваш_пароль] - получение прав администратора\n\n"
         "После ввода токена вам будут доступны все необходимые документы для ознакомления.",
         parse_mode=ParseMode.MARKDOWN
     )
@@ -81,7 +82,7 @@ async def token_handler(message: Message, user_states, pipeline) -> None:
     if len(args) < 2:
         await message.answer(
             "Пожалуйста, укажите токен после команды:\n"
-            "`/token ваш_уникальный_токен`",
+            "`/token [ваш_токен]`",
             parse_mode=ParseMode.MARKDOWN
         )
         return
@@ -90,7 +91,7 @@ async def token_handler(message: Message, user_states, pipeline) -> None:
     if token not in pipeline.document_store.list_user_tokens():
         await message.answer(
             "❌ Неверный токен. Пожалуйста, проверьте правильность введенного токена и попробуйте еще раз.\n"
-            "`/token ваш_уникальный_токен`",
+            "`/token [ваш_токен]`",
             parse_mode=ParseMode.MARKDOWN
         )
         user_states.pop(message.from_user.id, None)
@@ -98,7 +99,14 @@ async def token_handler(message: Message, user_states, pipeline) -> None:
 
     # Сохраняем токен пользователя
     if message.from_user.id in user_states:
-        user_states[message.from_user.id]['token'] = token
+        if user_states[message.from_user.id]['token'] == token:
+            await message.answer(
+                "❌ Данный токен уже установлен для Вас.",
+                parse_mode=ParseMode.MARKDOWN
+            )
+            return
+        else:
+            user_states[message.from_user.id]['token'] = token
     else:
         user_states[message.from_user.id] = {
             'token': token,
@@ -156,46 +164,6 @@ async def token_handler(message: Message, user_states, pipeline) -> None:
     )
 
 
-@router.message(Command(commands=['token']))
-async def token_handler(message: Message, user_states, pipeline) -> None:
-    """Обработчик команды /token."""
-    args = message.text.split(maxsplit=1)
-    if len(args) < 2:
-        await message.answer(
-            "Пожалуйста, укажите токен после команды:\n"
-            "`/token ваш_уникальный_токен`",
-            parse_mode=ParseMode.MARKDOWN
-        )
-        return
-
-    token = args[1].strip()
-    if token not in pipeline.document_store.list_user_tokens():
-        await message.answer(
-            "Ваш токен отсутствует в хранилище документов, попробуйте еще раз.\n"
-            "`/token ваш_уникальный_токен`",
-            parse_mode=ParseMode.MARKDOWN
-        )
-        user_states.pop(message.from_user.id, None)
-        return
-
-    # Сохраняем токен с учетом возможных админских прав
-    if isinstance(user_states.get(message.from_user.id), dict):
-        user_states[message.from_user.id]['token'] = token
-    else:
-        user_states[message.from_user.id] = {
-            'token': token,
-            'is_admin': False
-        }
-
-    documents = pipeline.list_documents(token)
-    await message.answer(
-        f"🔑 Токен установлен: `{token}`\n\n"
-        "Теперь вы можете задавать вопросы по вашим документам.\n\n"
-        f"📂 Ваши документы:\n\n" + "\n".join(f"•  {doc}" for doc in documents),
-        parse_mode=ParseMode.MARKDOWN
-    )
-
-
 @router.message(Command(commands=['documents']))
 async def documents_handler(message: Message, user_states, pipeline) -> None:
     """Показывает список документов пользователя и отправляет все файлы."""
@@ -203,7 +171,7 @@ async def documents_handler(message: Message, user_states, pipeline) -> None:
     if message.from_user.id not in user_states:
         await message.answer(
             "⚠️ Пожалуйста, сначала установите токен с помощью команды `/token`\n\n"
-            "Пример: `/token ваш_уникальный_токен`",
+            "Пример: `/token [ваш_токен]`",
             parse_mode=ParseMode.MARKDOWN
         )
         return
@@ -242,16 +210,6 @@ async def documents_handler(message: Message, user_states, pipeline) -> None:
         except Exception as e:
             await message.answer(f"⚠️ Не удалось отправить документ {doc_name}: {str(e)}")
 
-    # Финальное сообщение с инструкциями
-    await message.answer(
-        "✅ Вы получили все доступные документы!\n\n"
-        "Вы можете задавать вопросы по содержанию этих документов в свободной форме.\n\n"
-        "Примеры вопросов:\n"
-        "   • Каков график работы в компании?\n"
-        "   • Где можно найти информацию о льготах?\n"
-        "   • Какие правила безопасности нужно соблюдать?",
-        parse_mode=ParseMode.MARKDOWN
-    )
 
 
 @router.message(Command(commands=['admin']))
