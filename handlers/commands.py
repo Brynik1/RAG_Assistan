@@ -95,14 +95,15 @@ async def token_handler(message: Message, user_states, pipeline) -> None:
 
     # Финальное сообщение с инструкциями
     await message.answer(
-        "✅ Все документы успешно отправлены!\n\n"
-        "Теперь Вы можете задавать вопросы по содержанию этих документов.\n\n"
+        "✅ Вы получили все необходимые документы из базы знаний компании!\n\n"
+        "Так как суммарный объем документов может быть достаточно большим, для быстрых ответов Вы можете задавать вопросы по их содержанию прямо здесь.\n\n"
         "Примеры вопросов:\n"
         "   • Каков график работы в компании?\n"
         "   • Где можно найти информацию о льготах?\n"
         "   • Какие правила безопасности нужно соблюдать?",
         parse_mode=ParseMode.MARKDOWN
     )
+
 
 @router.message(Command(commands=['token']))
 async def token_handler(message: Message, user_states, pipeline) -> None:
@@ -300,7 +301,7 @@ async def create_token_handler(message: Message, user_states, pipeline) -> None:
         return
 
     token = args[1].strip()
-    if token in pipeline.document_store.list_user_states():
+    if token in pipeline.document_store.list_user_tokens():
         await message.answer(f"❌ Токен `{token}` уже существует", parse_mode=ParseMode.MARKDOWN)
         return
 
@@ -369,7 +370,8 @@ async def add_file_handler(message: Message, user_states, pipeline) -> None:
     file_ext = os.path.splitext(file_name)[1].lower()
 
     if file_ext not in allowed_extensions:
-        await message.answer(f"❌ Не удалось добавить файл `{file_name}`: недопустимый формат", parse_mode=ParseMode.MARKDOWN)
+        await message.answer(f"❌ Не удалось добавить файл `{file_name}`: недопустимый формат",
+                             parse_mode=ParseMode.MARKDOWN)
         return
 
     try:
@@ -377,7 +379,8 @@ async def add_file_handler(message: Message, user_states, pipeline) -> None:
 
         # Проверяем, существует ли файл
         if os.path.exists(file_path):
-            await message.answer(f"❌ Файл `{file_name}` уже существует для токена `{token}`", parse_mode=ParseMode.MARKDOWN)
+            await message.answer(f"❌ Файл `{file_name}` уже существует для токена `{token}`",
+                                 parse_mode=ParseMode.MARKDOWN)
             return
 
         # Скачиваем файл
@@ -395,9 +398,9 @@ async def add_file_handler(message: Message, user_states, pipeline) -> None:
             raise ValueError("Не удалось извлечь текст из файла")
 
         pipeline.document_store.add_document(token, file_name, text)
-        await message.answer(f"✅ Файл `{file_name}` успешно добавлен для токена `{token}`", parse_mode=ParseMode.MARKDOWN)
+        await message.answer(f"✅ Файл `{file_name}` успешно добавлен для токена `{token}`",
+                             parse_mode=ParseMode.MARKDOWN)
 
     except Exception as e:
         if os.path.exists(file_path):
             os.remove(file_path)
-
